@@ -8,16 +8,9 @@ import PanicButton from '@/components/common/PanicButton';
 import SecurityAlert, { type AlertData } from '@/components/common/SecurityAlert';
 import PassphraseInput from '@/components/common/PassphraseInput';
 import CallScreen from '@/components/call/CallScreen';
+
 import {
-  checkTorConnection,
-  isAccessAllowed,
-  getBlockMessage,
-  type NetworkStatus,
-} from '@/lib/security/network-sentinel';
-import {
-  getMode,
   onModeChange,
-  lock,
   recordActivity,
   registerPopstateHandler,
   type DisguiseMode,
@@ -29,16 +22,13 @@ import type { Message } from '@/types/message';
 import { encodeContent, createMessage } from '@/lib/chat/message';
 import { DEFAULT_AUTO_DESTRUCT_SECONDS } from '@/lib/chat/auto-destruct';
 
-/** 세션 상태 */
-type AppState = 'tor_check' | 'blocked' | 'disguise' | 'passphrase_setup' | 'passphrase' | 'messenger';
+type AppState = 'disguise' | 'passphrase_setup' | 'passphrase' | 'messenger';
 
 /** 통화 상태 */
 type CallState = { active: false } | { active: true; mode: 'voice' | 'video'; peerName: string };
 
 export default function Home() {
-  const [appState, setAppState] = useState<AppState>('tor_check');
-  const [networkStatus, setNetworkStatus] = useState<NetworkStatus>('checking');
-  const [blockMessage, setBlockMessage] = useState('');
+  const [appState, setAppState] = useState<AppState>('disguise');
   const [alerts, setAlerts] = useState<AlertData[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [myId] = useState(() => crypto.randomUUID());
@@ -49,22 +39,6 @@ export default function Home() {
   const conversations = [
     { id: '1', name: 'Anonymous', lastMessage: '...', verified: false },
   ];
-
-  // Tor check on mount
-  useEffect(() => {
-    let mounted = true;
-    checkTorConnection().then((state) => {
-      if (!mounted) return;
-      setNetworkStatus(state.status);
-      if (state.status === 'allowed') {
-        setAppState('disguise');
-      } else {
-        setBlockMessage(getBlockMessage());
-        setAppState('blocked');
-      }
-    });
-    return () => { mounted = false; };
-  }, []);
 
   // Register popstate handler & screenshot guard
   useEffect(() => {
@@ -159,40 +133,6 @@ export default function Home() {
   const handleDismissAlert = useCallback((id: string) => {
     setAlerts((prev) => prev.filter((a) => a.id !== id));
   }, []);
-
-  // Tor check screen
-  if (appState === 'tor_check') {
-    return (
-      <main className="flex-center full-height">
-        <div style={{ textAlign: 'center', fontSize: 13 }}>접속 확인 중...</div>
-        <noscript>
-          <div style={{ padding: 24, textAlign: 'center' }}>
-            <p>JavaScript가 비활성화되어 있습니다.</p>
-            <form action="/api/send" method="POST" style={{ marginTop: 16 }}>
-              <input type="text" name="message" placeholder="메시지" style={{ padding: '10px 12px', minHeight: 44, width: '100%', maxWidth: 280 }} />
-              <button type="submit" style={{ marginTop: 8, minHeight: 44, width: '100%', maxWidth: 280 }}>전송</button>
-            </form>
-          </div>
-        </noscript>
-      </main>
-    );
-  }
-
-  // Blocked screen
-  if (appState === 'blocked') {
-    return (
-      <main className="flex-center full-height">
-        <div style={{ textAlign: 'center', padding: 24, fontSize: 14 }}>
-          {blockMessage}
-        </div>
-        <noscript>
-          <div style={{ padding: 24, textAlign: 'center' }}>
-            <p>Tor 브라우저를 사용하세요.</p>
-          </div>
-        </noscript>
-      </main>
-    );
-  }
 
   // Disguise mode (calculator)
   if (appState === 'disguise') {
