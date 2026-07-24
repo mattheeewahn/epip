@@ -1,0 +1,30 @@
+{
+  "name": "secure-tor-messenger",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "vitest --run"
+  },
+  "dependencies": {
+    "@vercel/kv": "^3.0.0",
+    "hash-wasm": "^4.12.0",
+    "libsodium-wrappers": "^0.8.4",
+    "next": "14.2.35",
+    "react": "^18",
+    "react-dom": "^18",
+    "uuid": "^14.0.1"
+  },
+  "devDependencies": {
+    "@types/libsodium-wrappers": "^0.7.14",
+    "@types/node": "^20.19.43",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "@types/uuid": "^10.0.0",
+    "typescript": "^5",
+    "vitest": "^4.1.10"
+  }
+}
